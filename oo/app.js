@@ -1125,6 +1125,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (getStartedBtn) {
     getStartedBtn.addEventListener('click', () => {
+      // trigger blob collapse animation into circle
+      getStartedBtn.classList.add('blob-btn--collapse');
+
       splashScreen.classList.add('slide-up');
       
       setTimeout(() => {

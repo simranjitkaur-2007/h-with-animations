@@ -545,16 +545,28 @@
   outline: none;
   cursor: pointer;
   border-radius: 100px;
-  transition: color 0.5s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: "DM Sans", sans-serif;
+  color: #000;
+  transition:
+    color 0.5s ease,
+    background-color 0.4s ease,
+    transform 0.7s cubic-bezier(0.65, 0, 0.35, 1),
+    border-radius 0.7s cubic-bezier(0.65, 0, 0.35, 1),
+    width 0.7s cubic-bezier(0.65, 0, 0.35, 1),
+    height 0.7s cubic-bezier(0.65, 0, 0.35, 1),
+    padding 0.7s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.blob-btn:hover {
+  color: #ffffff;
 }
 
 .blob-btn::before {
-  content: "";
-  position: absolute;
-  z-index: 1;
-  inset: 0;
-  border-radius: inherit;
-  border: var(--blob-border-width) solid var(--blob-color);
+  content: none; /* remove visible border */
 }
 
 .blob-btn::after {
@@ -625,4 +637,27 @@
 
 .blob-btn:hover .blob-btn__blob {
   transform: translate3d(0,0,0) scale(1.4);
+}
+
+/* Click collapse animation: morph into circle and move down */
+.blob-btn--collapse {
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border-radius: 50%;
+  transform: translateY(80px);
+  color: transparent;
+  pointer-events: none;
+}
+
+.blob-btn--collapse svg {
+  opacity: 0;
+}
+
+.blob-btn--collapse .blob-btn__inner {
+  border-radius: 50%;
+}
+
+.blob-btn--collapse .blob-btn__blob {
+  transform: translate3d(0,0,0) scale(1.2);
 }
