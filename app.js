@@ -977,6 +977,13 @@ function initSplashParticles() {
   const sphereRadius = 250;
   const focalLength = 300; 
 
+  let currentScale = 2.8; 
+  let targetScale = 2.8;
+
+  window.shrinkSplashSphere = () => {
+    targetScale = 0.65; 
+  };
+
   let mouseX = 0;
   let mouseY = 0;
   let targetRotationX = 0;
@@ -1039,9 +1046,13 @@ function initSplashParticles() {
   function render() {
     ctx.clearRect(0, 0, width, height);
 
+    currentScale += (targetScale - currentScale) * 0.04;
+
     rotationX += (targetRotationX - rotationX) * 0.05;
     rotationY += (targetRotationY - rotationY) * 0.05;
-    rotationY += 0.005;
+    
+    rotationY += 0.008; 
+    rotationX += 0.002;
 
     nodes.forEach((node, i) => {
       node.x = node.baseX;
@@ -1050,13 +1061,15 @@ function initSplashParticles() {
 
       rotate3D(node, rotationX, rotationY);
 
-      const scale = focalLength / (focalLength + node.z);
-      const x2d = cx + node.x * scale;
-      const y2d = cy + node.y * scale;
-      const alpha = Math.max(0.1, scale * 1.5 - 0.5); 
+      const basePerspective = focalLength / (focalLength + node.z);
+      const finalScale = basePerspective * currentScale; 
+      
+      const x2d = cx + node.x * finalScale;
+      const y2d = cy + node.y * finalScale;
+      const alpha = Math.max(0.05, basePerspective * 1.5 - 0.5); 
 
       ctx.beginPath();
-      ctx.arc(x2d, y2d, 2.5 * scale, 0, Math.PI * 2);
+      ctx.arc(x2d, y2d, 2.5 * finalScale, 0, Math.PI * 2);
       ctx.fillStyle = `rgba(59, 130, 246, ${alpha})`; 
       ctx.fill();
 
@@ -1068,15 +1081,16 @@ function initSplashParticles() {
         const dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
 
         if (dist < 85) { 
-          const otherScale = focalLength / (focalLength + otherNode.z);
-          const otherX2d = cx + otherNode.x * otherScale;
-          const otherY2d = cy + otherNode.y * otherScale;
+          const otherPerspective = focalLength / (focalLength + otherNode.z);
+          const otherFinalScale = otherPerspective * currentScale;
+          const otherX2d = cx + otherNode.x * otherFinalScale;
+          const otherY2d = cy + otherNode.y * otherFinalScale;
           
           ctx.beginPath();
           ctx.moveTo(x2d, y2d);
           ctx.lineTo(otherX2d, otherY2d);
           ctx.strokeStyle = `rgba(56, 189, 248, ${alpha * 0.3})`;
-          ctx.lineWidth = 0.5 * scale;
+          ctx.lineWidth = 0.6 * finalScale;
           ctx.stroke();
         }
       }
@@ -1106,22 +1120,67 @@ document.addEventListener('DOMContentLoaded', () => {
 
   setTimeout(() => {
     if (delayedContent) delayedContent.classList.add('visible');
+    if (window.shrinkSplashSphere) window.shrinkSplashSphere();
   }, 2000);
+
+  // Feature 3: Wrap button inner text in a span so we can animate it independently
+  if (getStartedBtn) {
+    // Preserve SVG arrow but wrap text node in a span
+    const btnNodes = Array.from(getStartedBtn.childNodes);
+    const textNodes = btnNodes.filter(n => n.nodeType === Node.TEXT_NODE || (n.nodeName !== 'SVG' && n.nodeName !== 'svg' && !n.classList?.contains('blob-btn__inner')));
+    const svgEl = getStartedBtn.querySelector('svg');
+    const innerEl = getStartedBtn.querySelector('.blob-btn__inner');
+
+    // Rebuild: [textSpan] [svg] [inner]
+    const textSpan = document.createElement('span');
+    textSpan.className = 'blob-btn__text';
+    textSpan.textContent = 'Get Started';
+
+    // Clear and rebuild
+    getStartedBtn.innerHTML = '';
+    getStartedBtn.appendChild(textSpan);
+    if (svgEl) {
+      svgEl.style.transition = 'opacity 0.28s ease, transform 0.28s ease';
+      getStartedBtn.appendChild(svgEl);
+    }
+    if (innerEl) getStartedBtn.appendChild(innerEl);
+  }
 
   if (getStartedBtn) {
     getStartedBtn.addEventListener('click', () => {
-      splashScreen.classList.add('slide-up');
-      
+
+      // Feature 3a: Heading + quote slide up
+      const splashTitle = document.querySelector('.splash-title');
+      const splashQuote = document.querySelector('.splash-quote');
+      if (splashTitle) splashTitle.classList.add('clicked');
+      if (splashQuote) splashQuote.classList.add('clicked');
+
+      // Feature 3b: Button text fades down, button morphs to circle
+      const textSpan = getStartedBtn.querySelector('.blob-btn__text');
+      const btnSvg   = getStartedBtn.querySelector('svg');
+      if (textSpan) { textSpan.style.opacity = '0'; textSpan.style.transform = 'translateY(12px)'; }
+      if (btnSvg)   { btnSvg.style.opacity   = '0'; btnSvg.style.transform   = 'translateY(12px)'; }
+
+      // Slight delay so text fade starts before shape change
       setTimeout(() => {
+        getStartedBtn.classList.add('blob-btn--collapse');
+      }, 80);
+
+      // Feature 4: Gradient meshes shrink behind portal area
+      splashScreen.classList.add('clicked');
+
+      // Show landing page (original centered layout)
+      setTimeout(() => {
+        splashScreen.classList.add('slide-up');
         if (pageLanding) {
           pageLanding.style.opacity = '1';
           pageLanding.style.transform = 'scale(1)';
         }
-      }, 300);
+      }, 350);
 
       setTimeout(() => {
         splashScreen.style.display = 'none';
-      }, 900); 
+      }, 1100);
     });
   }
 });
